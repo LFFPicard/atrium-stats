@@ -1,0 +1,28 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+/* ─── Default theme: sentinel-violet ─────────────────────────────────────── */
+:root {
+  --color-bg:           #0a0c1a;
+  --color-surface:      #10132a;
+  --color-sidebar:      #0a0c1a;
+  --color-navbar:       #0a0c1a;
+  --color-accent:       #7c6af7;
+  --color-accent-text:  #ffffff;
+  --color-sidebar-text: #8b8fc0;
+  --color-navbar-text:  #e0e2f0;
+  --color-button:       #7c6af7;
+  --color-button-text:  #ffffff;
+  --color-border:       #252945;
+  --color-text:         #e0e2f0;
+  --color-text-muted:   #6a6e90;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+}
