@@ -1,6 +1,7 @@
 import { inArray, eq } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { leaderboardOptIn } from '@/lib/db/schema';
+import type { LeaderboardEntry } from '@/lib/sentinel/stats';
 
 export type OptInStatus = { optedIn: boolean; fullyPublic: boolean };
 
@@ -68,4 +69,24 @@ export async function setFullyPublic(userId: number, fullyPublic: boolean): Prom
     .update(leaderboardOptIn)
     .set({ fullyPublic, updatedAt: now })
     .where(eq(leaderboardOptIn.sentinelUserId, userId));
+}
+
+export type RankResult = { rank: number; total: number; ranked: LeaderboardEntry[] };
+
+/**
+ * The one true-opt-in leaderboard rule, shared by /me/leaderboard and Wrapped's leaderboard
+ * slide: only users who've opted in are ranked or counted toward the total. Returns null if
+ * `userId` isn't present in the opted-in cohort (either they haven't opted in, or — since
+ * Sentinel's leaderboard endpoint only returns users with at least one play in scope — they
+ * have zero plays for this scope).
+ */
+export function computeRank(
+  entries: LeaderboardEntry[],
+  optInMap: Map<number, OptInStatus>,
+  userId: number,
+): RankResult | null {
+  const ranked = entries.filter((e) => optInMap.get(e.userId)?.optedIn);
+  const index = ranked.findIndex((e) => e.userId === userId);
+  if (index === -1) return null;
+  return { rank: index + 1, total: ranked.length, ranked };
 }

@@ -24,6 +24,15 @@ const userNavItems: NavItem[] = [
       </svg>
     ),
   },
+  {
+    href: '/wrapped',
+    label: 'Wrapped',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+        <path d="M12 3l1.9 5.8H20l-4.9 3.6 1.9 5.8L12 14.6l-5 3.6 1.9-5.8L4 9h6.1L12 3z" />
+      </svg>
+    ),
+  },
 ];
 
 export default function MeShell({ username, children }: { username: string; children: React.ReactNode }) {
