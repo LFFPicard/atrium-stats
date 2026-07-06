@@ -54,3 +54,19 @@ export async function getUserStats(
 ): Promise<UserStats> {
   return sentinelFetch<UserStats>(`/stats/user/${userId}${scopeParams(scope)}`);
 }
+
+export type LeaderboardEntry = {
+  userId: number;
+  username: string;
+  displayName: string | null;
+  totalPlays: number;
+  totalHours: number;
+};
+
+// Returns every non-hidden user's real numbers — server-side use only (leaderboard
+// page computation). Never expose this through the client-facing Sentinel proxy; see
+// app/api/sentinel/[...path]/route.ts's allow-list, which deliberately excludes it.
+export async function getLeaderboard(scope: { year?: number; period?: Period } = {}): Promise<LeaderboardEntry[]> {
+  const data = await sentinelFetch<{ leaderboard: LeaderboardEntry[] }>(`/stats/leaderboard${scopeParams(scope)}`);
+  return data.leaderboard;
+}

@@ -26,6 +26,9 @@ function classify(path: string[]): { access: Access; selfIdIndex?: number } | nu
   if (first === 'history' && path.length === 1) return { access: 'admin' };
   if (first === 'stats' && second === 'server' && path.length === 2) return { access: 'admin' };
   if (first === 'stats' && second === 'user' && path.length === 3) return { access: 'self-or-admin', selfIdIndex: 2 };
+  // stats/leaderboard is deliberately absent — it returns every user's real numbers, and
+  // the leaderboard page computes anonymized rank server-side via lib/sentinel/stats.ts
+  // directly rather than through this client-facing proxy. Do not add a rule for it here.
   if (first === 'sessions' && second === 'live' && path.length === 2) return { access: 'admin' };
   // Metadata and artwork carry no per-user data — safe for either tier.
   if (first === 'metadata' && path.length === 2) return { access: 'any' };

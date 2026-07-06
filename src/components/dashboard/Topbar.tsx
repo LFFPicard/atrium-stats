@@ -8,6 +8,8 @@ const PAGE_TITLES: Record<string, string> = {
   '/dashboard/history': 'History',
   '/dashboard/users': 'Users',
   '/dashboard/libraries': 'Libraries',
+  '/me': 'My Stats',
+  '/me/leaderboard': 'Leaderboard',
 };
 
 export default function Topbar({ onMenuToggle }: { onMenuToggle: () => void }) {
