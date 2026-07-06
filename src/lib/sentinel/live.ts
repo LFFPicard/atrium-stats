@@ -23,6 +23,7 @@ export type LiveMedia = {
   parentTitle: string | null;
   year: number | null;
   thumb: string | null;
+  duration: number | null; // milliseconds — media length, for turning viewOffset into a percentage
 } | null;
 
 export type LiveSession = {

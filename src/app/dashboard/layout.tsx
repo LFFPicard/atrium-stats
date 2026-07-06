@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation';
 import { getSession } from '@/lib/auth/session';
+import DashboardShell from '@/components/dashboard/DashboardShell';
 
 // Authoritative tier check for everything under /dashboard — the admin-only surface.
 // Middleware only checks for a cookie's presence; this is where isAdmin is actually verified.
@@ -8,5 +9,5 @@ export default async function DashboardLayout({ children }: { children: React.Re
   if (!session) redirect('/login');
   if (!session.isAdmin) redirect('/me');
 
-  return <>{children}</>;
+  return <DashboardShell username={session.username}>{children}</DashboardShell>;
 }

@@ -6,6 +6,7 @@ export type HeatmapCell = { dayOfWeek: number; hour: number; count: number };
 
 export type TopContentItem = {
   metadataId: number | null;
+  ratingKey: string | null; // use this (not metadataId) for the artwork proxy
   title: string | null;
   thumb: string | null;
   playCount: number;

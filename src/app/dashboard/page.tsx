@@ -1,17 +1,34 @@
-import { getSession } from '@/lib/auth/session';
+import { getServerStats } from '@/lib/sentinel/stats';
+import { sentinelFetch, SentinelError } from '@/lib/sentinel/client';
+import HeroMetrics from '@/components/dashboard/HeroMetrics';
+import LiveActivity from '@/components/dashboard/LiveActivity';
 
 export default async function DashboardPage() {
-  const session = await getSession();
+  try {
+    const [stats, live] = await Promise.all([
+      getServerStats({ period: '30d' }),
+      sentinelFetch<{ sessions: unknown[] }>('/sessions/live'),
+    ]);
 
-  return (
-    <main className="min-h-screen flex items-center justify-center p-8 bg-[var(--color-bg)] text-[var(--color-text)]">
-      <div className="text-center max-w-md">
-        <h1 className="text-2xl font-semibold mb-2">Welcome back, {session?.username}</h1>
-        <p className="text-[var(--color-text-muted)] text-sm">
-          Live activity, history, users, libraries, and server stats land in Batch 2 and Batch 3.
-          Batch 1&apos;s foundation — auth, the Sentinel client, and theming — is in place.
-        </p>
+    return (
+      <div>
+        <HeroMetrics
+          totalPlays={stats.totalPlays}
+          totalHours={stats.totalHours}
+          uniqueUsers={stats.uniqueUsers}
+          liveCount={live.sessions.length}
+        />
+
+        <h2 className="text-sm font-semibold text-(--color-text) mb-3">Live Activity</h2>
+        <LiveActivity />
       </div>
-    </main>
-  );
+    );
+  } catch (err) {
+    const message = err instanceof SentinelError ? err.message : 'Could not reach Sentinel.';
+    return (
+      <div className="rounded-xl border border-red-800 bg-red-950/40 text-red-300 text-sm p-4">
+        {message}
+      </div>
+    );
+  }
 }
