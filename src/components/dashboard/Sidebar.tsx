@@ -23,6 +23,14 @@ const navItems = [
     ),
   },
   {
+    href: '/dashboard/stats', label: 'Stats',
+    icon: (
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
+        <path d="M3 21h18M3 21V9l6-6 6 6v12M9 21V13h6v8" />
+      </svg>
+    ),
+  },
+  {
     href: '/dashboard/history', label: 'History',
     icon: (
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" strokeLinejoin="round" className="w-5 h-5 shrink-0">
