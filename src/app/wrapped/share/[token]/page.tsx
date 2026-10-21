@@ -49,10 +49,14 @@ export default async function WrappedSharePage({ params }: { params: Promise<{ t
     return <SlideShow slides={slides} exitHref="/" />;
   } catch (err) {
     if (err instanceof SentinelError && err.status === 404) notFound();
-    const message = err instanceof SentinelError ? err.message : 'Could not reach Sentinel.';
+    // Public page — never echo SentinelError.message here: it carries Sentinel's request
+    // path and raw response body. Log the detail server-side, show visitors a generic line.
+    console.error('[wrapped/share] Failed to load Wrapped:', err instanceof Error ? err.message : err);
     return (
       <div className="fixed inset-0 bg-(--color-bg) text-(--color-text) flex items-center justify-center p-8">
-        <div className="rounded-xl border border-red-800 bg-red-950/40 text-red-300 text-sm p-4 max-w-sm text-center">{message}</div>
+        <div className="rounded-xl border border-red-800 bg-red-950/40 text-red-300 text-sm p-4 max-w-sm text-center">
+          This Wrapped isn&apos;t available right now. Try again later.
+        </div>
       </div>
     );
   }

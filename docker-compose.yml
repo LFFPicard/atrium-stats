@@ -9,7 +9,6 @@ services:
     environment:
       - APP_URL=https://stats.yourdomain.com
       - DATABASE_URL=/app/data/atrium-stats.db
-      - SESSION_SECRET=changeme_generate_a_real_secret
       - SENTINEL_URL=http://sentinel-host:7700
       - SENTINEL_API_KEY=sk_read_xxxxx
       - PLEX_CLIENT_IDENTIFIER=atrium-stats-changeme

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSession } from '@/lib/auth/session';
 import { sentinelFetchRaw } from '@/lib/sentinel/client';
+import { classify, buildSentinelPath } from '@/lib/sentinel/proxyRules';
 
 // The only way client components ever reach Sentinel — the read key lives entirely in
 // lib/sentinel/client.ts, called server-side only. This route also carries the tier
@@ -12,30 +13,8 @@ import { sentinelFetchRaw } from '@/lib/sentinel/client';
 // implementing POST/PUT/DELETE here means admin-tier Sentinel operations are never
 // reachable through this app by construction, not by an enforcement check that could drift.
 
-type Access = 'admin' | 'self-or-admin' | 'any';
-
-// Explicit allow-list of recognized Sentinel read paths — an unlisted path is rejected
-// rather than silently forwarded, so a new Sentinel endpoint never becomes reachable here
-// until someone deliberately decides its access tier.
-function classify(path: string[]): { access: Access; selfIdIndex?: number } | null {
-  const [first, second] = path;
-
-  if (first === 'users' && path.length <= 2) return { access: 'admin' };
-  if (first === 'libraries' && path.length === 1) return { access: 'admin' };
-  if (first === 'geo' && path.length === 2) return { access: 'admin' };
-  if (first === 'history' && path.length === 1) return { access: 'admin' };
-  if (first === 'stats' && second === 'server' && path.length === 2) return { access: 'admin' };
-  if (first === 'stats' && second === 'user' && path.length === 3) return { access: 'self-or-admin', selfIdIndex: 2 };
-  // stats/leaderboard is deliberately absent — it returns every user's real numbers, and
-  // the leaderboard page computes anonymized rank server-side via lib/sentinel/stats.ts
-  // directly rather than through this client-facing proxy. Do not add a rule for it here.
-  if (first === 'sessions' && second === 'live' && path.length === 2) return { access: 'admin' };
-  // Metadata and artwork carry no per-user data — safe for either tier.
-  if (first === 'metadata' && path.length === 2) return { access: 'any' };
-  if (first === 'artwork' && path.length === 2) return { access: 'any' };
-
-  return null;
-}
+// The allow-list itself, plus segment validation and query filtering, lives in
+// lib/sentinel/proxyRules.ts so it can be unit-tested without a running server.
 
 export async function GET(request: NextRequest, context: { params: Promise<{ path: string[] }> }) {
   const session = await getSession();
@@ -56,7 +35,7 @@ export async function GET(request: NextRequest, context: { params: Promise<{ pat
     }
   }
 
-  const sentinelPath = `/${path.join('/')}${request.nextUrl.search}`;
+  const sentinelPath = buildSentinelPath(path, rule, request.nextUrl.searchParams);
 
   try {
     const sentinelRes = await sentinelFetchRaw(sentinelPath);

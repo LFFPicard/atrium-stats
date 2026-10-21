@@ -16,8 +16,7 @@ project brief, architecture, and build plan.
 
 ## Quick start
 
-1. Copy `.env.example` to `.env` and fill in `SENTINEL_URL`, `SENTINEL_API_KEY`, and a generated
-   `SESSION_SECRET` (`openssl rand -base64 32`)
+1. Copy `.env.example` to `.env` and fill in `SENTINEL_URL` and `SENTINEL_API_KEY`
 2. `docker compose up -d`
 3. Visit the app and sign in with Plex
 

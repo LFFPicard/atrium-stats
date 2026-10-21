@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { randomBytes } from 'node:crypto';
-import { eq } from 'drizzle-orm';
+import { eq, lt } from 'drizzle-orm';
 import { db } from '@/lib/db';
 import { sessions } from '@/lib/db/schema';
 
@@ -24,6 +24,11 @@ export async function createSession(data: {
 }): Promise<void> {
   const token = randomBytes(32).toString('hex');
   const now = Math.floor(Date.now() / 1000);
+
+  // getSession() only deletes an expired row when its own cookie comes back; sweep the rest
+  // here so abandoned sessions don't accumulate forever. Sign-ins are rare enough that this
+  // costs nothing.
+  await db.delete(sessions).where(lt(sessions.expiresAt, now));
 
   await db.insert(sessions).values({
     token,
