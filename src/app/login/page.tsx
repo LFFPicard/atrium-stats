@@ -1,5 +1,9 @@
 const ERROR_MESSAGES: Record<string, string> = {
   plex_unreachable: "Couldn't reach Plex. Please try again in a moment.",
+  sentinel_unreachable:
+    "Plex signed you in, but Atrium Stats couldn't reach Sentinel to look up your account. " +
+    'Ask the server admin to check that Sentinel is running.',
+  session_failed: "Signed in, but Atrium Stats couldn't save your session. Ask the server admin to check the logs.",
   session_expired: 'Your sign-in attempt expired before finishing. Please try again.',
   pin_timeout: "Didn't hear back from Plex in time. Please try again.",
   no_history:

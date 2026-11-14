@@ -24,13 +24,22 @@ function plexHeaders(extra?: Record<string, string>): Record<string, string> {
   };
 }
 
+/** fetch() against plex.tv that names the call and keeps the underlying network error as the cause. */
+async function plexFetch(what: string, url: string, init?: RequestInit): Promise<Response> {
+  try {
+    return await fetch(url, init);
+  } catch (err) {
+    throw new Error(`Plex request failed: could not reach plex.tv (${what})`, { cause: err });
+  }
+}
+
 export type PlexPin = {
   id: number;
   code: string;
 };
 
 export async function createPlexPin(): Promise<PlexPin> {
-  const res = await fetch('https://plex.tv/api/v2/pins', {
+  const res = await plexFetch('create pin', 'https://plex.tv/api/v2/pins', {
     method: 'POST',
     headers: { ...plexHeaders(), 'Content-Type': 'application/x-www-form-urlencoded' },
     body: new URLSearchParams({ strong: 'true' }),
@@ -54,7 +63,7 @@ export function buildPlexAuthUrl(pin: PlexPin, forwardUrl: string): string {
 
 /** Returns the auth token once the pin has been linked, or null if the user hasn't approved yet. */
 export async function checkPlexPin(pinId: number): Promise<string | null> {
-  const res = await fetch(`https://plex.tv/api/v2/pins/${pinId}`, {
+  const res = await plexFetch('check pin', `https://plex.tv/api/v2/pins/${pinId}`, {
     headers: plexHeaders(),
     cache: 'no-store',
   });
@@ -84,7 +93,7 @@ export type PlexAccount = {
 };
 
 export async function getPlexAccount(authToken: string): Promise<PlexAccount> {
-  const res = await fetch('https://plex.tv/users/account.json', {
+  const res = await plexFetch('account', 'https://plex.tv/users/account.json', {
     headers: plexHeaders({ 'X-Plex-Token': authToken }),
     cache: 'no-store',
   });
@@ -101,4 +110,46 @@ export async function getPlexAccount(authToken: string): Promise<PlexAccount> {
     email: (user.email as string) ?? null,
     thumb: (user.thumb as string) ?? null,
   };
+}
+
+// One entry of plex.tv's /api/v2/resources — the devices and servers linked to an account.
+export type PlexResource = {
+  name?: string;
+  provides?: string; // comma-separated, e.g. "server" or "client,player"
+  owned?: boolean;
+};
+
+/**
+ * True when the list contains a Plex Media Server the account itself owns: `owned` is
+ * exactly true and `provides` includes "server". Pure — unit-tested in
+ * tests/plexResources.test.mjs. Servers merely shared with the account have owned false.
+ */
+export function hasOwnedServer(resources: unknown): boolean {
+  if (!Array.isArray(resources)) return false;
+  return resources.some((r) => {
+    if (typeof r !== 'object' || r === null) return false;
+    const { owned, provides } = r as PlexResource;
+    if (owned !== true || typeof provides !== 'string') return false;
+    return provides
+      .split(',')
+      .map((part) => part.trim().toLowerCase())
+      .includes('server');
+  });
+}
+
+/**
+ * Asks plex.tv, with the signing-in user's own token, whether their account owns a Plex
+ * Media Server. Used only to back the owner fallback in sign-in (see matchSentinelUser):
+ * Sentinel stores the server owner under a server-local id, so the owner cannot be
+ * matched by plex.tv account id.
+ */
+export async function ownsPlexServer(authToken: string): Promise<boolean> {
+  const res = await plexFetch('resources', 'https://plex.tv/api/v2/resources?includeHttps=1', {
+    headers: plexHeaders({ 'X-Plex-Token': authToken }),
+    cache: 'no-store',
+  });
+
+  if (!res.ok) throw new Error(`Failed to list Plex resources: ${res.status}`);
+
+  return hasOwnedServer(await res.json());
 }
